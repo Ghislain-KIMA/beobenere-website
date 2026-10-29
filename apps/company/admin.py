@@ -18,6 +18,10 @@ class CompanyAdminForm(forms.ModelForm):
 class CompanyAdmin(admin.ModelAdmin):
     form = CompanyAdminForm
 
+    def has_add_permission(self, request):
+        # Le site n'a qu'une seule entreprise : on ne peut en créer une que si la table est vide.
+        return not Company.objects.exists()
+
     class Media:
         css = {
             "all": ("vendor/intl-tel-input/css/intlTelInput.min.css",)
