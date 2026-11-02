@@ -57,6 +57,45 @@ class SendPendingNotificationsTests(TestCase):
         devis.refresh_from_db()
         self.assertIsNone(devis.notified_at)
 
+    def test_email_body_contains_the_request_message(self):
+        self.create_devis(message="Besoin d'un devis pour un site vitrine de dix pages.")
+
+        send_pending_notifications()
+
+        self.assertIn("Besoin d'un devis pour un site vitrine de dix pages.", mail.outbox[0].body)
+
+    def test_all_pending_devis_are_notified(self):
+        first = self.create_devis(full_name="Premier Client", email="premier@example.com")
+        second = self.create_devis(full_name="Second Client", email="second@example.com")
+
+        sent, failed = send_pending_notifications()
+
+        self.assertEqual((sent, failed), (2, 0))
+        self.assertEqual(len(mail.outbox), 2)
+        first.refresh_from_db()
+        second.refresh_from_db()
+        self.assertIsNotNone(first.notified_at)
+        self.assertIsNotNone(second.notified_at)
+
+    def test_one_failure_does_not_block_the_other_devis(self):
+        failing = self.create_devis(full_name="Premier Client", email="premier@example.com")
+        working = self.create_devis(full_name="Second Client", email="second@example.com")
+
+        def fail_for_first_client(subject, *args, **kwargs):
+            if "Premier Client" in subject:
+                raise Exception("SMTP indisponible")
+
+        with mock.patch("devis.notifications.send_mail", side_effect=fail_for_first_client) as send_mail:
+            with self.assertLogs("devis.notifications", level="ERROR"):
+                sent, failed = send_pending_notifications()
+
+        self.assertEqual((sent, failed), (1, 1))
+        self.assertEqual(send_mail.call_count, 2)
+        failing.refresh_from_db()
+        working.refresh_from_db()
+        self.assertIsNone(failing.notified_at)
+        self.assertIsNotNone(working.notified_at)
+
     def test_command_reports_sent_notifications(self):
         self.create_devis()
         out = StringIO()
