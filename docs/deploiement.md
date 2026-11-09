@@ -69,7 +69,7 @@ CREATE DATABASE beobenere OWNER beobenere;
 ```bash
 sudo mkdir -p /srv/beobenere
 sudo chown <utilisateur>:<utilisateur> /srv/beobenere
-git clone https://github.com/Ghislain-KIMA/website-beobenere.git /srv/beobenere
+git clone https://github.com/Ghislain-KIMA/beobenere-website.git /srv/beobenere
 cd /srv/beobenere
 git log --oneline -1
 ```
@@ -292,6 +292,8 @@ Le détail de cette ligne (`flock`, `sh -c`) est expliqué dans [`notifications.
 
 ## 13. Sauvegardes automatiques
 
+> **Sur le serveur d'entraînement**, cette étape et la suivante ne sont pas utilisées : les sauvegardes y sont assurées par le script `sauvegarde-serveur` (timer systemd `sauvegarde-serveur.timer`, tous les jours à 3 h 30). Il lance `pg_dump -Fc` en tant qu'utilisateur `postgres` (donc sans `~/.pgpass`), garde 3 jours de copies dans `/var/backups/serveur/beobenere/`, puis le PC les récupère et les archive avec restic. Les étapes 13 et 14 décrivent la méthode autonome, à utiliser sur un VPS qui n'a pas cette infrastructure. BeoBenere n'a aucun fichier téléversé : la base PostgreSQL est la seule chose à sauvegarder (le fichier `.env`, qui contient des secrets, ne l'est volontairement pas).
+
 **Connexion sans mot de passe pour `pg_dump`** — fichier `~/.pgpass` :
 
 ```
@@ -481,19 +483,33 @@ L'heure doit être juste : le cron, les dates des devis et les noms des sauvegar
 
 ## Mettre à jour le site
 
-Après chaque `git push` depuis le poste de développement, sur le serveur :
+Après chaque `git push` depuis le poste de développement, sur le serveur.
+
+**Avant tout, une sauvegarde instantanée de la base** (indispensable quand la mise à jour contient une migration). Sur le serveur d'entraînement :
+
+```bash
+umask 077
+sudo runuser -u postgres -- pg_dump -Fc beobenere > ~/beobenere-avant-maj.dump
+pg_restore -l ~/beobenere-avant-maj.dump | grep "TABLE DATA"   # une ligne par table
+```
+
+Sur un serveur configuré avec les étapes 13 et 14, lancer simplement `~/bin/sauvegarde-beobenere.sh`. Une fois la mise à jour vérifiée, supprimer ce fichier : il contient les données des clients.
+
+Puis la mise à jour :
 
 ```bash
 cd /srv/beobenere
 source .venv/bin/activate
 git pull
 pip install -r requirements.txt
+python manage.py check
+python manage.py migrate --plan      # voir les migrations à venir, sans les appliquer
 python manage.py migrate
 python manage.py collectstatic --noinput
 sudo systemctl restart beobenere
 ```
 
-**Vérification :** `git log --oneline -1` montre le nouveau commit, `systemctl status beobenere` une heure de démarrage récente. Le cron n'a pas besoin d'être redémarré : il relance Python à chaque passage.
+**Vérification :** `git log --oneline -1` montre le nouveau commit, `systemctl status beobenere` une heure de démarrage récente, `python manage.py showmigrations | grep "\[ \]"` n'affiche rien, `curl -I http://127.0.0.1:8000/` répond `200 OK`. Le cron n'a pas besoin d'être redémarré : il relance Python à chaque passage.
 
 ## Contrôles réguliers
 

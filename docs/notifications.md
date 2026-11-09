@@ -85,7 +85,7 @@ Les alertes partent vers une **autre** adresse que l'expéditeur : une messageri
 `crontab -e`, puis une seule ligne :
 
 ```
-* * * * * cd /chemin/vers/website-beobenere && /usr/bin/flock -n /tmp/beobenere-notifications.lock sh -c '/chemin/vers/python manage.py send_devis_notifications; /chemin/vers/python manage.py send_contact_notifications' >> logs/cron.log 2>&1
+* * * * * cd /chemin/vers/beobenere-website && /usr/bin/flock -n /tmp/beobenere-notifications.lock sh -c '/chemin/vers/python manage.py send_devis_notifications; /chemin/vers/python manage.py send_contact_notifications' >> logs/cron.log 2>&1
 ```
 
 | Élément | Rôle |
