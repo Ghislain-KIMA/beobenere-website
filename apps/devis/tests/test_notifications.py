@@ -4,6 +4,7 @@ from unittest import mock
 from django.core import mail
 from django.core.management import call_command
 from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from devis.models import Devis
 from devis.notifications import send_pending_notifications
@@ -33,7 +34,7 @@ class SendPendingNotificationsTests(TestCase):
         email = mail.outbox[0]
         self.assertEqual(email.to, ["gestion@example.com"])
         self.assertIn("Jean Dupont", email.subject)
-        self.assertIn(f"https://beobenere.test/admin/devis/devis/{devis.pk}/change/", email.body)
+        self.assertIn("https://beobenere.test" + reverse("admin:devis_devis_change", args=[devis.pk]), email.body)
         devis.refresh_from_db()
         self.assertIsNotNone(devis.notified_at)
 

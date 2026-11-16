@@ -17,6 +17,7 @@ Including another URLconf
 
 
 
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 
@@ -27,7 +28,7 @@ admin.site.index_title = "Tableau de bord"
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path(settings.ADMIN_URL, admin.site.urls),
     path("", include("homepage.urls")),
     path("services/", include("service.urls")),
     path("devis/", include("devis.urls")),

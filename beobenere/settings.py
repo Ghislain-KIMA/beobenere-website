@@ -46,6 +46,10 @@ ALLOWED_HOSTS = [
 
 USE_HTTPS = os.environ.get("USE_HTTPS", "False") == "True"
 
+# Adresse de l'admin, sans « / » initial. Par défaut « admin/ » ; la changer dans le .env
+# évite les tentatives automatiques des robots, qui essaient tous /admin/.
+ADMIN_URL = (os.environ.get("ADMIN_URL", "").strip().strip("/") or "admin") + "/"
+
 if USE_HTTPS:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True

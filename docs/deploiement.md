@@ -116,6 +116,7 @@ chmod 600 .env
 | `SECRET_KEY` | la clé générée ci-dessus |
 | `DEBUG` | `False` |
 | `ALLOWED_HOSTS` | noms et IP du serveur, séparés par des virgules, sans espace (ex. `beobenere.com,www.beobenere.com`) |
+| `ADMIN_URL` | adresse de l'admin, sans `/` (défaut `admin`). **En production, choisir un autre nom** (ex. `gestion-beobenere`) : les robots essaient tous `/admin/`. Les liens des e-mails de notification suivent automatiquement. Ce n'est pas une protection à lui seul, seulement un premier filtre |
 | `USE_HTTPS` | `False` tant que le certificat n'est pas installé (étape 14), puis `True` |
 | `DB_NAME`, `DB_USER` | `beobenere` |
 | `DB_PASSWORD` | le mot de passe de l'étape 2 |

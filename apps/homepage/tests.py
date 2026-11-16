@@ -2,8 +2,8 @@ import importlib
 import os
 from unittest.mock import patch
 
-from django.urls import reverse
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
+from django.urls import clear_url_caches, reverse
 
 from company.models import Company
 
@@ -101,3 +101,53 @@ class AllowedHostsSettingTest(SimpleTestCase):
 
     def test_trailing_comma_is_ignored(self):
         self.assertEqual(self._read_allowed_hosts("beobenere.com,"), ["beobenere.com"])
+
+
+class AdminUrlSettingTest(SimpleTestCase):
+    """ADMIN_URL permet de déplacer l'admin hors de /admin/, adresse que tous les robots essaient."""
+
+    def _read_admin_url(self, value):
+        """Relit settings.py avec une valeur donnée pour ADMIN_URL (None = variable absente)."""
+        settings_module = importlib.import_module("beobenere.settings")
+        self.addCleanup(importlib.reload, settings_module)
+        with patch.dict(os.environ), patch("dotenv.load_dotenv"):
+            if value is None:
+                os.environ.pop("ADMIN_URL", None)
+            else:
+                os.environ["ADMIN_URL"] = value
+            return importlib.reload(settings_module).ADMIN_URL
+
+    def test_default_is_admin(self):
+        self.assertEqual(self._read_admin_url(None), "admin/")
+
+    def test_empty_value_falls_back_to_admin(self):
+        self.assertEqual(self._read_admin_url(""), "admin/")
+
+    def test_custom_value_gets_a_trailing_slash(self):
+        self.assertEqual(self._read_admin_url("gestion-beobenere"), "gestion-beobenere/")
+
+    def test_slashes_and_spaces_are_cleaned(self):
+        self.assertEqual(self._read_admin_url(" /gestion-beobenere/ "), "gestion-beobenere/")
+
+
+class AdminUrlRoutingTest(TestCase):
+    """L'adresse de l'admin suit ADMIN_URL, et l'ancienne adresse n'existe plus."""
+
+    def _reload_urls(self):
+        importlib.reload(importlib.import_module("beobenere.urls"))
+        clear_url_caches()
+
+    def test_admin_moves_to_the_configured_address(self):
+        self.addCleanup(self._reload_urls)
+        with override_settings(ADMIN_URL="gestion-test/"):
+            self._reload_urls()
+            self.assertEqual(reverse("admin:index"), "/gestion-test/")
+            self.assertEqual(self.client.get("/gestion-test/login/").status_code, 200)
+            self.assertEqual(self.client.get("/admin/login/").status_code, 404)
+
+    def test_admin_is_served_on_admin_when_configured_so(self):
+        self.addCleanup(self._reload_urls)
+        with override_settings(ADMIN_URL="admin/"):
+            self._reload_urls()
+            self.assertEqual(reverse("admin:index"), "/admin/")
+            self.assertEqual(self.client.get("/admin/login/").status_code, 200)

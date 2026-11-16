@@ -4,6 +4,7 @@ from unittest import mock
 from django.core import mail
 from django.core.management import call_command
 from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from contact.models import ContactMessage
 from contact.notifications import send_pending_notifications
@@ -35,7 +36,7 @@ class SendPendingNotificationsTests(TestCase):
         self.assertIn("Nouveau message de contact", email.subject)
         self.assertIn("Awa Ouédraogo", email.subject)
         self.assertIn(
-            f"https://beobenere.test/admin/contact/contactmessage/{contact_message.pk}/change/",
+            "https://beobenere.test" + reverse("admin:contact_contactmessage_change", args=[contact_message.pk]),
             email.body,
         )
         contact_message.refresh_from_db()
