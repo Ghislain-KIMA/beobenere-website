@@ -482,6 +482,23 @@ L'heure doit être juste : le cron, les dates des devis et les noms des sauvegar
 
 ---
 
+## Protéger l'admin
+
+Trois protections, de la moins à la plus efficace :
+
+1. **Adresse de l'admin changée** (`ADMIN_URL` dans le `.env`, étape 5) : filtre les robots qui n'essaient que `/admin/`.
+2. **Blocage après des mots de passe faux** (django-axes) : après **5 échecs** depuis la même adresse IP, cette adresse est bloquée **30 minutes**, même avec le bon mot de passe ; un succès remet le compteur à zéro. Aucun réglage à faire dans le `.env`. La base reçoit deux tables en plus (`python manage.py migrate`). Les tentatives sont visibles dans l'admin (sections « Axes »).
+3. À venir : double authentification, puis restriction de l'accès à l'admin dans Nginx.
+
+**Condition indispensable pour le blocage : la configuration Nginx doit contenir `proxy_set_header X-Real-IP $remote_addr;`** (étape 10). Sans cette ligne, Django croit que tous les visiteurs viennent de `127.0.0.1` : quelqu'un qui se trompe cinq fois bloquerait tout le monde, toi compris. Vérification : `grep X-Real-IP /etc/nginx/sites-available/beobenere`.
+
+**Débloquer à la main** (par exemple après s'être trompé de mot de passe) : attendre 30 minutes, ou sur le serveur
+
+```bash
+cd /srv/beobenere && source .venv/bin/activate
+python manage.py axes_reset
+```
+
 ## Mettre à jour le site
 
 Après chaque `git push` depuis le poste de développement, sur le serveur.
@@ -533,6 +550,7 @@ sudo systemctl restart beobenere
 | Site sans style | `collectstatic` oublié, ou `alias` Nginx sans `/` final |
 | `403` sur `/static/` | droits de lecture manquants pour `www-data` (`namei -l`) |
 | `400 Bad Request` | l'adresse utilisée n'est pas dans `ALLOWED_HOSTS` |
+| « Trop de tentatives de connexion » sur l'admin | 5 mots de passe faux de suite : attendre 30 minutes ou `python manage.py axes_reset` ; si tout le monde est bloqué, vérifier `X-Real-IP` dans Nginx |
 | `502 Bad Gateway` | Gunicorn arrêté : `journalctl -u beobenere -n 50` |
 | Redirections en boucle après `USE_HTTPS=True` | `X-Forwarded-Proto` absent de la configuration Nginx |
 | `Host key verification failed` / `Permission denied (publickey)` | commande lancée sur la mauvaise machine (regarder l'invite : `@ubuntu` = PC, `@ubuntu-server` = serveur), ou clé non autorisée |

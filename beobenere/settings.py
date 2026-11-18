@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 import sys
+from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -70,6 +71,7 @@ INSTALLED_APPS = [
 
     ## Installed apps
     'phonenumber_field',
+    'axes',   # blocage après trop de mots de passe faux
 
     # Apps locales
     "homepage",
@@ -87,7 +89,23 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',   # toujours en dernier
 ]
+
+# --- Blocage des mots de passe faux (django-axes) ---
+# Après 5 échecs depuis la même adresse IP, cette adresse est bloquée 30 minutes, même avec le bon
+# mot de passe. Un succès remet le compteur à zéro. Pour débloquer à la main : python manage.py axes_reset
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',   # doit rester en premier
+    'django.contrib.auth.backends.ModelBackend',
+]
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(minutes=30)
+AXES_RESET_ON_SUCCESS = True
+AXES_COOLOFF_MESSAGE = "Trop de tentatives de connexion. Réessayez dans 30 minutes."
+AXES_LOCKOUT_PARAMETERS = ['ip_address']
+# Derrière Nginx, l'adresse réelle est dans X-Real-IP (voir beobenere/security.py).
+AXES_CLIENT_IP_CALLABLE = 'beobenere.security.get_client_ip'
 
 ROOT_URLCONF = 'beobenere.urls'
 
