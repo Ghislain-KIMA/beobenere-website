@@ -37,13 +37,13 @@ class HomepageViewTest(TestCase):
             name="BeoBenere",
             email="contact@example.com",
             phone="+22670000000",
-            service_area="Ouagadougou et environs",
+            service_area="Tenkodogo et sa région",
             business_hours="Lundi – Vendredi, 8h – 18h",
         )
 
         response = self.client.get(reverse("homepage:about"))
 
-        self.assertContains(response, "Ouagadougou et environs")
+        self.assertContains(response, "Tenkodogo et sa région")
         self.assertContains(response, "Lundi – Vendredi, 8h – 18h")
 
     def test_about_page_hides_practical_section_without_company(self):

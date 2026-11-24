@@ -1,7 +1,7 @@
 # BeoBenere
 
 Site vitrine officiel de **BeoBenere**, entreprise de services informatiques
-basée à Ouagadougou, Burkina Faso.
+basée à Tenkodogo, Burkina Faso, et au service de clients à distance.
 
 > ⚠️ **Dépôt à but de démonstration.** Ce code est rendu public à titre de
 > portfolio professionnel. Voir [`LICENSE`](./LICENSE) — tous droits réservés,
@@ -9,7 +9,7 @@ basée à Ouagadougou, Burkina Faso.
 
 ## À propos
 
-BeoBenere accompagne les particuliers et petites entreprises à Ouagadougou dans leurs besoins informatiques du quotidien : installation et formation bureautique, diagnostic et réparation matérielle, mais aussi création de sites et d'identité visuelle pour qui se lance ou veut se faire connaître. Une approche directe, sans jargon, centrée sur des solutions qui durent.
+BeoBenere accompagne les particuliers et petites entreprises, sur place à Tenkodogo et à distance, dans leurs besoins informatiques du quotidien : installation et formation bureautique, diagnostic et réparation matérielle, mais aussi création de sites et d'identité visuelle pour qui se lance ou veut se faire connaître. Une approche directe, sans jargon, centrée sur des solutions qui durent.
 
 Quatre domaines de services :
 
@@ -51,7 +51,7 @@ Voir [`docs/`](./docs/README.md) pour la documentation détaillée (architecture
 
 ## Contact
 
-**BeoBenere** — Ouagadougou et environs
+**BeoBenere** — Tenkodogo et à distance
 
 - Email : [beobenere.business@gmail.com](mailto:beobenere.business@gmail.com)
 - Téléphone / WhatsApp : +226 72 75 00 96
